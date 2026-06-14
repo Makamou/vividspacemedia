@@ -4,7 +4,7 @@ import skylineDallas from "./assets/dallas-skyline.avif";
 
 const IMAGES = {
   hero: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=756,fit=crop,f=jpeg/YbNJWN2lb3TV2Pl3/twilight-topaz-gigapixel-2x-scale-AMqDORKpv8Fab71q.png",
-  kitchen: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=90",
+  kitchen: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=930,fit=crop/YbNJWN2lb3TV2Pl3/dsc06264-edit-edit-dWxLg2zlpPCrrQVn.jpg",
   livingRoom:
     "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80",
   exterior:
@@ -140,12 +140,14 @@ const CSS = `
     position: absolute; inset: 0; z-index: 1;
     background: linear-gradient(135deg, rgba(12,30,21,0.85) 0%, rgba(12,30,21,0.4) 50%, rgba(12,30,21,0.65) 100%);
   }
-  .hero-img {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: cover; object-position: center;
-    transform: scale(1.08); animation: heroZoom 14s ease-out forwards;
+  .hero-video-wrap { position: absolute; inset: 0; overflow: hidden; }
+  .hero-video {
+    position: absolute; top: 50%; left: 50%; border: 0; pointer-events: none;
+    width: 177.78vh; height: 56.25vw; min-width: 100%; min-height: 100%;
+    transform: translate(-50%, -50%) scale(1.08);
+    animation: heroZoom 14s ease-out forwards;
   }
-  @keyframes heroZoom { to { transform: scale(1); } }
+  @keyframes heroZoom { to { transform: translate(-50%, -50%) scale(1); } }
   .hero-content {
     position: relative; z-index: 2; max-width: 760px;
     animation: heroFade 1.2s ease 0.4s both;
@@ -1130,11 +1132,14 @@ function FeaturedKitchen() {
 function Hero() {
   return (
     <section className="hero" id="home">
-      <img
-        src={IMAGES.hero}
-        alt="Luxury property at twilight"
-        className="hero-img"
-      />
+      <div className="hero-video-wrap">
+        <iframe
+          className="hero-video"
+          src="https://player.vimeo.com/video/1124904985?h=undefined&playlist=1124904985&autoplay=1&controls=0&loop=1&autopause=0&playsinline=1&muted=1"
+          allow="autoplay; fullscreen; picture-in-picture"
+          title="Vivid Spaces Media showreel"
+        />
+      </div>
       <div className="hero-bg" />
       <div className="hero-content">
         <p className="hero-eyebrow">Dallas · Fort Worth · Texas</p>
