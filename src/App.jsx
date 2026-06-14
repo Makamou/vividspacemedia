@@ -70,6 +70,7 @@ const CSS = `
   }
 
   html { scroll-behavior: smooth; }
+  section[id] { scroll-margin-top: 96px; }
   body { font-family: var(--sans); background: var(--warm-white); color: var(--ink); overflow-x: hidden; }
 
   /* SCROLL PROGRESS */
@@ -670,45 +671,54 @@ function FadeIn({ children, className = "", delay = 0 }) {
   );
 }
 
+
+const SECTION_IDS = ["home", "about", "services", "portfolio", "contact"];
+
+function useActiveSection(ids) {
+  const [active, setActive] = useState(ids[0]);
+  useEffect(() => {
+    const sections = ids.map((id) => document.getElementById(id)).filter(Boolean);
+    if (!sections.length) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        });
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
+    );
+    sections.forEach((s) => obs.observe(s));
+    return () => obs.disconnect();
+  }, [ids]);
+  return active;
+}
+
 // ── Nav ────────────────────────────────────────────────────────────────────
-function Nav({ page, setPage }) {
+function Nav() {
   const scrolled = useScrollSpy();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const active = useActiveSection(SECTION_IDS);
   const nav = ["Home", "About", "Services", "Portfolio", "Contact"];
-  const pageMap = {
+  const idMap = {
     Home: "home",
     About: "about",
     Services: "services",
     Portfolio: "portfolio",
     Contact: "contact",
   };
-  const go = (p) => {
-    setPage(p);
-    setMobileOpen(false);
-  };
   return (
     <>
       <nav className={`nav${scrolled ? " scrolled" : ""}`}>
-        <a
-          className="nav-logo"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            go("home");
-          }}
-        >
+        <a className="nav-logo" href="#home">
           <img src={LOGO} alt="Vivid Spaces Media" />
         </a>
         <ul className="nav-links">
           {nav.map((n) => (
             <li key={n}>
               <a
-                href="#"
-                className={page === pageMap[n] ? "active" : ""}
-                onClick={(e) => {
-                  e.preventDefault();
-                  go(pageMap[n]);
-                }}
+                href={`#${idMap[n]}`}
+                className={active === idMap[n] ? "active" : ""}
+                onClick={() => setMobileOpen(false)}
               >
                 {n}
               </a>
@@ -735,14 +745,7 @@ function Nav({ page, setPage }) {
       </nav>
       <div className={`nav-mobile-menu${mobileOpen ? " open" : ""}`}>
         {nav.map((n) => (
-          <a
-            key={n}
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              go(pageMap[n]);
-            }}
-          >
+          <a key={n} href={`#${idMap[n]}`} onClick={() => setMobileOpen(false)}>
             {n}
           </a>
         ))}
@@ -1093,8 +1096,9 @@ function ContactSection() {
 }
 
 
+
 // ── Featured Kitchen Showcase ──────────────────────────────────────────────
-function FeaturedKitchen({ setPage }) {
+function FeaturedKitchen() {
   return (
     <section className="kitchen-showcase">
       <div className="kitchen-showcase-inner">
@@ -1112,10 +1116,8 @@ function FeaturedKitchen({ setPage }) {
               <div><img src={IMAGES.luxuryKitchen3} alt="Luxury kitchen detail" loading="lazy" /></div>
             </div>
             <div style={{ marginTop: 32 }}>
-              <a href="#" className="btn-primary" style={{ marginRight: 12 }}
-                onClick={(e) => { e.preventDefault(); setPage("portfolio"); }}>View Portfolio</a>
-              <a href="#" className="btn-ghost"
-                onClick={(e) => { e.preventDefault(); setPage("contact"); }}>Book a Shoot</a>
+              <a href="#portfolio" className="btn-primary" style={{ marginRight: 12 }}>View Portfolio</a>
+              <a href="#contact" className="btn-ghost">Book a Shoot</a>
             </div>
           </FadeIn>
         </div>
@@ -1124,77 +1126,53 @@ function FeaturedKitchen({ setPage }) {
   );
 }
 
-// ── Home Page ──────────────────────────────────────────────────────────────
-function HomePage({ setPage }) {
-  const galleryImages = [
-    { src: IMAGES.g1, wide: false },
-    { src: IMAGES.g2, wide: true },
-    { src: IMAGES.g3, wide: false },
-    { src: IMAGES.g4, wide: false },
-    { src: IMAGES.g5, wide: false },
-    { src: IMAGES.g6, wide: false },
-    { src: IMAGES.g7, wide: true },
-    { src: IMAGES.g8, wide: false },
-  ];
+// ── Hero ───────────────────────────────────────────────────────────────────
+function Hero() {
+  return (
+    <section className="hero" id="home">
+      <img
+        src={IMAGES.hero}
+        alt="Luxury property at twilight"
+        className="hero-img"
+      />
+      <div className="hero-bg" />
+      <div className="hero-content">
+        <p className="hero-eyebrow">Dallas · Fort Worth · Texas</p>
+        <h1 className="hero-title">
+          Your Property,
+          <br />
+          <em>Beautifully</em> Told
+        </h1>
+        <p className="hero-sub">
+          Premium real estate photography, videography, and drone media that
+          sell homes faster and for more.
+        </p>
+        <div className="hero-actions">
+          <a href="#contact" className="btn-primary">
+            Book a Shoot
+          </a>
+          <a href="#portfolio" className="btn-ghost">
+            View Portfolio
+          </a>
+        </div>
+      </div>
+      <div className="hero-badge">
+        <span className="hero-badge-num">5.0</span>
+        <span className="hero-badge-label">★ Rated</span>
+      </div>
+      <div className="hero-scroll">
+        <div className="scroll-line" />
+        <span>Scroll</span>
+      </div>
+    </section>
+  );
+}
+
+// ── About ──────────────────────────────────────────────────────────────────
+function About() {
   return (
     <>
-      {/* HERO */}
-      <section className="hero">
-        <img
-          src={IMAGES.hero}
-          alt="Luxury property at twilight"
-          className="hero-img"
-        />
-        <div className="hero-bg" />
-        <div className="hero-content">
-          <p className="hero-eyebrow">Dallas · Fort Worth · Texas</p>
-          <h1 className="hero-title">
-            Your Property,
-            <br />
-            <em>Beautifully</em> Told
-          </h1>
-          <p className="hero-sub">
-            Premium real estate photography, videography, and drone media that
-            sell homes faster and for more.
-          </p>
-          <div className="hero-actions">
-            <a
-              href="#"
-              className="btn-primary"
-              onClick={(e) => {
-                e.preventDefault();
-                setPage("contact");
-              }}
-            >
-              Book a Shoot
-            </a>
-            <a
-              href="#"
-              className="btn-ghost"
-              onClick={(e) => {
-                e.preventDefault();
-                setPage("portfolio");
-              }}
-            >
-              View Portfolio
-            </a>
-          </div>
-        </div>
-        <div className="hero-badge">
-          <span className="hero-badge-num">5.0</span>
-          <span className="hero-badge-label">★ Rated</span>
-        </div>
-        <div className="hero-scroll">
-          <div className="scroll-line" />
-          <span>Scroll</span>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <Stats />
-
-      {/* VISION */}
-      <section className="vision">
+      <section className="vision" id="about">
         <div className="vision-grid">
           <FadeIn>
             <div className="vision-text">
@@ -1241,445 +1219,6 @@ function HomePage({ setPage }) {
           </FadeIn>
         </div>
       </section>
-
-      {/* EXPERTISE */}
-      <section className="expertise">
-        <FadeIn>
-          <div className="expertise-header">
-            <p className="section-label">What We Offer</p>
-            <h2 className="section-title" style={{ color: "#fff" }}>
-              Full-Service <em>Real Estate Media</em>
-            </h2>
-            <p>
-              From sunrise exteriors to cinematic walk-throughs — every service
-              is crafted to make your listing unforgettable.
-            </p>
-          </div>
-        </FadeIn>
-        <div className="services-grid">
-          {[
-            {
-              img: IMAGES.exterior,
-              cat: "Photography",
-              title: "Real Estate Photography",
-            },
-            { img: IMAGES.aerial, cat: "Aerial", title: "Drone Photo & Video" },
-            {
-              img: IMAGES.livingRoom,
-              cat: "Videography",
-              title: "Cinematic Video Tours",
-            },
-            {
-              img: IMAGES.interior,
-              cat: "Interior",
-              title: "Interior Design Photography",
-            },
-            {
-              img: IMAGES.airbnb,
-              cat: "Short-Term Rentals",
-              title: "Airbnb & Vacation Rentals",
-            },
-            {
-              img: IMAGES.commercial,
-              cat: "Commercial",
-              title: "Commercial Photography",
-            },
-          ].map((s, i) => (
-            <FadeIn key={i} delay={(i % 3) + 1}>
-              <div className="service-card" onClick={() => setPage("services")}>
-                <img src={s.img} alt={s.title} loading="lazy" />
-                <div className="service-overlay" />
-                <div className="service-info">
-                  <p className="service-name">{s.cat}</p>
-                  <h3 className="service-title">{s.title}</h3>
-                  <span className="service-link">See More →</span>
-                </div>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </section>
-
-      {/* WHY US */}
-      <section className="why-us">
-        <div className="why-grid">
-          <FadeIn>
-            <div className="why-mosaic">
-              <img
-                src={IMAGES.g4}
-                alt="Real estate photography sample"
-                loading="lazy"
-              />
-              <img
-                src={IMAGES.g5}
-                alt="Interior photography sample"
-                loading="lazy"
-              />
-              <img
-                src={IMAGES.g6}
-                alt="Architecture photography sample"
-                loading="lazy"
-              />
-            </div>
-          </FadeIn>
-          <FadeIn delay={2}>
-            <div className="why-content">
-              <p className="section-label">Why Vivid Spaces</p>
-              <h2 className="section-title">
-                Precision Crafted
-                <br />
-                in <em>Every Frame</em>
-              </h2>
-              <div className="pillars">
-                {[
-                  {
-                    title: "Meticulous Attention to Detail",
-                    body: "From composition and light balance to colour grading and post-processing — every element is refined so your property is shown at its absolute best.",
-                  },
-                  {
-                    title: "Fast 24–48 Hr Turnaround",
-                    body: "We know your listings can't wait. Our streamlined editing workflow delivers polished, ready-to-publish media within one to two business days.",
-                  },
-                  {
-                    title: "Agents Thrive. Clients Close.",
-                    body: "Our mission is simple: when your listings stand out, you win more clients and close more deals. Your success is our reputation.",
-                  },
-                ].map((p, i) => (
-                  <div className="pillar" key={i}>
-                    <span className="pillar-num">0{i + 1}</span>
-                    <div className="pillar-body">
-                      <h4>{p.title}</h4>
-                      <p>{p.body}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* FEATURED KITCHEN */}
-      <FeaturedKitchen setPage={setPage} />
-
-      {/* GALLERY */}
-      <section className="gallery-section">
-        <FadeIn className="gallery-header">
-          <p className="section-label" style={{ justifyContent: "center" }}>
-            Our Work
-          </p>
-          <h2 className="section-title" style={{ textAlign: "center" }}>
-            Visuals That <em>Elevate</em> Your Listings
-          </h2>
-        </FadeIn>
-        <div className="gallery-strip">
-          {galleryImages.map((img, i) => (
-            <div key={i} className={`gallery-item${img.wide ? " wide" : ""}`}>
-              <img
-                src={img.src}
-                alt={`Real estate photo ${i + 1}`}
-                loading="lazy"
-              />
-              <div className="gallery-item-overlay" />
-            </div>
-          ))}
-        </div>
-        <div style={{ textAlign: "center", marginTop: 44 }}>
-          <a
-            href="#"
-            className="btn-primary"
-            style={{ display: "inline-block" }}
-            onClick={(e) => {
-              e.preventDefault();
-              setPage("portfolio");
-            }}
-          >
-            View Full Portfolio
-          </a>
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <Testimonials />
-
-      {/* PROCESS */}
-      <Process />
-
-      {/* CONTACT */}
-      <ContactSection />
-    </>
-  );
-}
-
-// ── Services Page ──────────────────────────────────────────────────────────
-function ServicesPage({ setPage }) {
-  const services = [
-    {
-      img: IMAGES.exterior,
-      cat: "Photography",
-      name: "Residential Real Estate",
-      desc: "Stunning interior and exterior photography that highlights every home's best features — from grand entryways to cozy backyard retreats.",
-    },
-    {
-      img: IMAGES.aerial,
-      cat: "Aerial Media",
-      name: "Drone Photo & Video",
-      desc: "FAA-certified aerial photography and video that provides breathtaking context, lot size visibility, and neighbourhood perspective.",
-    },
-    {
-      img: IMAGES.livingRoom,
-      cat: "Videography",
-      name: "Cinematic Property Tours",
-      desc: "Professional walkthrough videos with colour grading, music, and motion that create an emotional connection before buyers ever step inside.",
-    },
-    {
-      img: IMAGES.interior,
-      cat: "Design Photography",
-      name: "Interior Design Showcases",
-      desc: "Beautifully lit, carefully composed photography for interior designers, home stagers, and luxury properties requiring editorial-level craft.",
-    },
-    {
-      img: IMAGES.airbnb,
-      cat: "Short-Term Rentals",
-      name: "Airbnb & Vacation Rentals",
-      desc: "Hospitality-focused photography that boosts booking rates by showcasing ambiance, comfort, and the unique character of your rental.",
-    },
-    {
-      img: IMAGES.commercial,
-      cat: "Commercial",
-      name: "Commercial Properties",
-      desc: "Professional photography for retail spaces, office buildings, and commercial developments — built to attract tenants, buyers, and investors.",
-    },
-  ];
-  return (
-    <div style={{ marginTop: 60 }}>
-      <div className="page-hero">
-        <div className="page-hero-bg">
-          <img src={IMAGES.commercial} alt="Our Services" />
-        </div>
-        <div className="page-hero-overlay" />
-        <div className="page-hero-content">
-          <p className="page-hero-eyebrow">What We Do</p>
-          <h1 className="page-hero-title">Our Services</h1>
-          <p className="page-hero-sub">
-            From immersive media solutions to premium add-ons — each offering
-            crafted with precision, quality, and visual impact in mind.
-          </p>
-        </div>
-      </div>
-      <div style={{ padding: "80px 6vw", background: "var(--warm-white)" }}>
-        <div className="services-page-grid">
-          {services.map((s, i) => (
-            <FadeIn key={i} delay={(i % 2) + 1}>
-              <div className="service-page-card">
-                <img src={s.img} alt={s.name} loading="lazy" />
-                <div className="service-page-overlay" />
-                <div className="service-page-info">
-                  <p className="service-page-cat">{s.cat}</p>
-                  <h3 className="service-page-name">{s.name}</h3>
-                  <p className="service-page-desc">{s.desc}</p>
-                  <a
-                    href="#"
-                    className="service-page-btn"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage("contact");
-                    }}
-                  >
-                    Book This Service
-                  </a>
-                </div>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </div>
-      <Process />
-      <ContactSection />
-    </div>
-  );
-}
-
-// ── Portfolio Page ─────────────────────────────────────────────────────────
-function PortfolioPage() {
-  const [filter, setFilter] = useState("All");
-  const [lightbox, setLightbox] = useState(null);
-  const filters = [
-    "All",
-    "Residential",
-    "Aerial",
-    "Interior",
-    "Commercial",
-    "Rental",
-  ];
-  const items = [
-    { src: IMAGES.g1, cat: "Residential" },
-    { src: IMAGES.g2, cat: "Interior" },
-    { src: IMAGES.g3, cat: "Aerial" },
-    { src: IMAGES.g4, cat: "Residential" },
-    { src: IMAGES.g5, cat: "Interior" },
-    { src: IMAGES.g6, cat: "Commercial" },
-    { src: IMAGES.g7, cat: "Rental" },
-    { src: IMAGES.g8, cat: "Aerial" },
-    { src: IMAGES.g9, cat: "Residential" },
-    { src: IMAGES.pool, cat: "Residential" },
-    { src: IMAGES.bedroom, cat: "Interior" },
-    { src: IMAGES.bathroom, cat: "Interior" },
-    { src: IMAGES.dining, cat: "Interior" },
-    { src: IMAGES.aerial, cat: "Aerial" },
-    { src: IMAGES.commercial, cat: "Commercial" },
-  ];
-  const filtered =
-    filter === "All" ? items : items.filter((i) => i.cat === filter);
-  return (
-    <div style={{ marginTop: 60 }}>
-      {lightbox !== null && (
-        <Lightbox
-          images={filtered}
-          startIdx={lightbox}
-          onClose={() => setLightbox(null)}
-        />
-      )}
-      <div className="page-hero">
-        <div className="page-hero-bg">
-          <img src={IMAGES.g2} alt="Portfolio" />
-        </div>
-        <div className="page-hero-overlay" />
-        <div className="page-hero-content">
-          <p className="page-hero-eyebrow">Our Work</p>
-          <h1 className="page-hero-title">Portfolio</h1>
-          <p className="page-hero-sub">
-            A curated selection of properties we've had the privilege of
-            capturing across the Dallas–Fort Worth area.
-          </p>
-        </div>
-      </div>
-      <div className="portfolio-page">
-        <div className="portfolio-filter">
-          {filters.map((f) => (
-            <button
-              key={f}
-              className={`filter-btn${filter === f ? " active" : ""}`}
-              onClick={() => setFilter(f)}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        <div className="portfolio-grid">
-          {filtered.map((item, i) => (
-            <div
-              className="portfolio-item"
-              key={i}
-              onClick={() => setLightbox(i)}
-            >
-              <img
-                src={item.src}
-                alt={`${item.cat} photography`}
-                loading="lazy"
-              />
-              <div className="portfolio-item-tag">{item.cat}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── About Page ─────────────────────────────────────────────────────────────
-function AboutPage({ setPage }) {
-  return (
-    <div className="about-page">
-      <div className="page-hero">
-        <div className="page-hero-bg">
-          <img src={IMAGES.g5} alt="About Vivid Spaces" />
-        </div>
-        <div className="page-hero-overlay" />
-        <div className="page-hero-content">
-          <p className="page-hero-eyebrow">Our Story</p>
-          <h1 className="page-hero-title">About Vivid Spaces</h1>
-          <p className="page-hero-sub">
-            A boutique real estate media studio built on craft, consistency, and
-            a genuine passion for visual storytelling.
-          </p>
-        </div>
-      </div>
-      <div className="about-intro">
-        <div className="about-intro-grid">
-          <FadeIn>
-            <div className="about-intro-img">
-              <img src={luxuryImg} alt="Luxury kitchen photography" />
-            </div>
-          </FadeIn>
-          <FadeIn delay={2}>
-            <div>
-              <p className="section-label">Who We Are</p>
-              <h2 className="section-title">
-                Built on Craft,
-                <br />
-                Driven by <em>Excellence</em>
-              </h2>
-              <p
-                style={{
-                  marginTop: 28,
-                  marginBottom: 20,
-                  fontSize: 16,
-                  lineHeight: 1.85,
-                  color: "var(--muted)",
-                  fontWeight: 300,
-                }}
-              >
-                Welcome to Vivid Spaces Media — where we specialize in
-                high-quality visual media for real estate. From entry-level
-                starter homes to extraordinary luxury residences, we capture
-                every property with the same level of care, precision, and
-                artistry.
-              </p>
-              <p
-                style={{
-                  marginBottom: 20,
-                  fontSize: 16,
-                  lineHeight: 1.85,
-                  color: "var(--muted)",
-                  fontWeight: 300,
-                }}
-              >
-                What sets us apart is our personal approach. Rather than large
-                teams that cycle through projects, we take the time to build
-                genuine relationships with our clients — providing consistent,
-                high-quality results with trusted, hands-on service every single
-                time.
-              </p>
-              <p
-                style={{
-                  marginBottom: 32,
-                  fontSize: 16,
-                  lineHeight: 1.85,
-                  color: "var(--muted)",
-                  fontWeight: 300,
-                }}
-              >
-                With meticulous attention to detail and a commitment to
-                highlighting each property's distinctive character, we ensure
-                your listings stand out in today's competitive real estate
-                market.
-              </p>
-              <a
-                href="#"
-                className="btn-primary"
-                style={{ display: "inline-block" }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage("contact");
-                }}
-              >
-                Work With Us
-              </a>
-            </div>
-          </FadeIn>
-        </div>
-      </div>
       <div className="about-values">
         <FadeIn>
           <div style={{ textAlign: "center" }}>
@@ -1719,14 +1258,254 @@ function AboutPage({ setPage }) {
           ))}
         </div>
       </div>
-      <Testimonials />
-      <ContactSection />
+    </>
+  );
+}
+
+// ── Services ───────────────────────────────────────────────────────────────
+const SERVICES = [
+  {
+    img: IMAGES.exterior,
+    cat: "Photography",
+    name: "Residential Real Estate",
+    desc: "Stunning interior and exterior photography that highlights every home's best features — from grand entryways to cozy backyard retreats.",
+  },
+  {
+    img: IMAGES.aerial,
+    cat: "Aerial Media",
+    name: "Drone Photo & Video",
+    desc: "FAA-certified aerial photography and video that provides breathtaking context, lot size visibility, and neighbourhood perspective.",
+  },
+  {
+    img: IMAGES.livingRoom,
+    cat: "Videography",
+    name: "Cinematic Property Tours",
+    desc: "Professional walkthrough videos with colour grading, music, and motion that create an emotional connection before buyers ever step inside.",
+  },
+  {
+    img: IMAGES.interior,
+    cat: "Design Photography",
+    name: "Interior Design Showcases",
+    desc: "Beautifully lit, carefully composed photography for interior designers, home stagers, and luxury properties requiring editorial-level craft.",
+  },
+  {
+    img: IMAGES.airbnb,
+    cat: "Short-Term Rentals",
+    name: "Airbnb & Vacation Rentals",
+    desc: "Hospitality-focused photography that boosts booking rates by showcasing ambiance, comfort, and the unique character of your rental.",
+  },
+  {
+    img: IMAGES.commercial,
+    cat: "Commercial",
+    name: "Commercial Properties",
+    desc: "Professional photography for retail spaces, office buildings, and commercial developments — built to attract tenants, buyers, and investors.",
+  },
+];
+
+function Services() {
+  return (
+    <section className="expertise" id="services">
+      <FadeIn>
+        <div className="expertise-header">
+          <p className="section-label">What We Offer</p>
+          <h2 className="section-title" style={{ color: "#fff" }}>
+            Full-Service <em>Real Estate Media</em>
+          </h2>
+          <p>
+            From sunrise exteriors to cinematic walk-throughs — every service
+            is crafted to make your listing unforgettable.
+          </p>
+        </div>
+      </FadeIn>
+      <div className="services-page-grid" style={{ marginTop: 0 }}>
+        {SERVICES.map((s, i) => (
+          <FadeIn key={i} delay={(i % 2) + 1}>
+            <div className="service-page-card">
+              <img src={s.img} alt={s.name} loading="lazy" />
+              <div className="service-page-overlay" />
+              <div className="service-page-info">
+                <p className="service-page-cat">{s.cat}</p>
+                <h3 className="service-page-name">{s.name}</h3>
+                <p className="service-page-desc">{s.desc}</p>
+                <a href="#contact" className="service-page-btn">
+                  Book This Service
+                </a>
+              </div>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── Why Us ─────────────────────────────────────────────────────────────────
+function WhyUs() {
+  return (
+    <section className="why-us">
+      <div className="why-grid">
+        <FadeIn>
+          <div className="why-mosaic">
+            <img
+              src={IMAGES.g4}
+              alt="Real estate photography sample"
+              loading="lazy"
+            />
+            <img
+              src={IMAGES.g5}
+              alt="Interior photography sample"
+              loading="lazy"
+            />
+            <img
+              src={IMAGES.g6}
+              alt="Architecture photography sample"
+              loading="lazy"
+            />
+          </div>
+        </FadeIn>
+        <FadeIn delay={2}>
+          <div className="why-content">
+            <p className="section-label">Why Vivid Spaces</p>
+            <h2 className="section-title">
+              Precision Crafted
+              <br />
+              in <em>Every Frame</em>
+            </h2>
+            <div className="pillars">
+              {[
+                {
+                  title: "Meticulous Attention to Detail",
+                  body: "From composition and light balance to colour grading and post-processing — every element is refined so your property is shown at its absolute best.",
+                },
+                {
+                  title: "Fast 24–48 Hr Turnaround",
+                  body: "We know your listings can't wait. Our streamlined editing workflow delivers polished, ready-to-publish media within one to two business days.",
+                },
+                {
+                  title: "Agents Thrive. Clients Close.",
+                  body: "Our mission is simple: when your listings stand out, you win more clients and close more deals. Your success is our reputation.",
+                },
+              ].map((p, i) => (
+                <div className="pillar" key={i}>
+                  <span className="pillar-num">0{i + 1}</span>
+                  <div className="pillar-body">
+                    <h4>{p.title}</h4>
+                    <p>{p.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+// ── Portfolio ──────────────────────────────────────────────────────────────
+const PORTFOLIO_ITEMS = [
+  { src: IMAGES.g1, cat: "Residential" },
+  { src: IMAGES.g2, cat: "Interior" },
+  { src: IMAGES.g3, cat: "Aerial" },
+  { src: IMAGES.g4, cat: "Residential" },
+  { src: IMAGES.g5, cat: "Interior" },
+  { src: IMAGES.g6, cat: "Commercial" },
+  { src: IMAGES.g7, cat: "Rental" },
+  { src: IMAGES.g8, cat: "Aerial" },
+  { src: IMAGES.g9, cat: "Residential" },
+  { src: IMAGES.pool, cat: "Residential" },
+  { src: IMAGES.bedroom, cat: "Interior" },
+  { src: IMAGES.bathroom, cat: "Interior" },
+  { src: IMAGES.dining, cat: "Interior" },
+  { src: IMAGES.aerial, cat: "Aerial" },
+  { src: IMAGES.commercial, cat: "Commercial" },
+];
+
+function Portfolio() {
+  const [filter, setFilter] = useState("All");
+  const [lightbox, setLightbox] = useState(null);
+  const filters = [
+    "All",
+    "Residential",
+    "Aerial",
+    "Interior",
+    "Commercial",
+    "Rental",
+  ];
+  const filtered =
+    filter === "All"
+      ? PORTFOLIO_ITEMS
+      : PORTFOLIO_ITEMS.filter((i) => i.cat === filter);
+  return (
+    <section className="gallery-section" id="portfolio">
+      {lightbox !== null && (
+        <Lightbox
+          images={filtered}
+          startIdx={lightbox}
+          onClose={() => setLightbox(null)}
+        />
+      )}
+      <FadeIn className="gallery-header">
+        <p className="section-label" style={{ justifyContent: "center" }}>
+          Our Work
+        </p>
+        <h2 className="section-title" style={{ textAlign: "center" }}>
+          Visuals That <em>Elevate</em> Your Listings
+        </h2>
+      </FadeIn>
+      <div className="portfolio-filter">
+        {filters.map((f) => (
+          <button
+            key={f}
+            className={`filter-btn${filter === f ? " active" : ""}`}
+            onClick={() => setFilter(f)}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+      <div className="portfolio-grid">
+        {filtered.map((item, i) => (
+          <div
+            className="portfolio-item"
+            key={i}
+            onClick={() => setLightbox(i)}
+          >
+            <img
+              src={item.src}
+              alt={`${item.cat} photography`}
+              loading="lazy"
+            />
+            <div className="portfolio-item-tag">{item.cat}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── Contact Banner ─────────────────────────────────────────────────────────
+function ContactBanner() {
+  return (
+    <div className="page-hero" style={{ marginTop: 0 }}>
+      <div className="page-hero-bg">
+        <img src={skylineDallas} alt="Dallas skyline" />
+      </div>
+      <div className="page-hero-overlay" />
+      <div className="page-hero-content">
+        <p className="page-hero-eyebrow">Get In Touch</p>
+        <h1 className="page-hero-title">
+          Let's Create
+          <br />
+          <em>Something Great</em>
+        </h1>
+      </div>
     </div>
   );
 }
 
 // ── Footer ─────────────────────────────────────────────────────────────────
-function Footer({ setPage }) {
+function Footer() {
   return (
     <footer className="footer">
       <div className="footer-logo">
@@ -1744,15 +1523,7 @@ function Footer({ setPage }) {
           Instagram
         </a>
         <a href="#">Facebook</a>
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setPage("contact");
-          }}
-        >
-          Contact
-        </a>
+        <a href="#contact">Contact</a>
       </div>
     </footer>
   );
@@ -1760,44 +1531,24 @@ function Footer({ setPage }) {
 
 // ── App Root ───────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage] = useState("home");
   const progress = useScrollProgress();
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
-  const navigate = (p) => setPage(p);
   return (
     <>
       <style>{CSS}</style>
       <div className="scroll-progress" style={{ width: `${progress}%` }} />
-      <Nav page={page} setPage={navigate} />
-
-      {page === "home" && <HomePage setPage={navigate} />}
-      {page === "services" && <ServicesPage setPage={navigate} />}
-      {page === "portfolio" && <PortfolioPage />}
-      {page === "about" && <AboutPage setPage={navigate} />}
-      {page === "contact" && (
-        <div style={{ marginTop: 60 }}>
-          <div className="page-hero">
-            <div className="page-hero-bg">
-              <img src={skylineDallas} alt="Dallas skyline" />
-            </div>
-            <div className="page-hero-overlay" />
-            <div className="page-hero-content">
-              <p className="page-hero-eyebrow">Get In Touch</p>
-              <h1 className="page-hero-title">
-                Let's Create
-                <br />
-                <em>Something Great</em>
-              </h1>
-            </div>
-          </div>
-          <ContactSection />
-          <Process />
-        </div>
-      )}
-
-      <Footer setPage={navigate} />
+      <Nav />
+      <Hero />
+      <Stats />
+      <About />
+      <Services />
+      <WhyUs />
+      <FeaturedKitchen />
+      <Portfolio />
+      <Testimonials />
+      <Process />
+      <ContactBanner />
+      <ContactSection />
+      <Footer />
       <a
         className="mobile-book-bar"
         href="https://portal.vividspacesmedia.com/order/vividspace/order"
